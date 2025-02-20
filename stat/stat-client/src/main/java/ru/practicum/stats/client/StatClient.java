@@ -10,4 +10,6 @@ public interface StatClient {
     void hit(HitDto hitDto);
 
     List<StatsDto> get(StatsRequestParamsDto statsRequestParamsDto);
+
+    void init(String statUrl);
 }
