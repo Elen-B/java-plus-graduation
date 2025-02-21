@@ -14,11 +14,11 @@ import java.util.List;
 @SpringBootApplication
 @ComponentScan(value = {"ru.practicum.ewm", "ru.practicum.stats.client"})
 public class MainApplication {
+
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(MainApplication.class, args);
         StatClient statClient = context.getBean(StatClient.class);
 
-        // hit stats
         LocalDateTime startDateTime = LocalDateTime.now();
 
         HitDto testHitDto = HitDto.builder()

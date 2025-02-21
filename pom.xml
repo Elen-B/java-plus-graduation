@@ -18,8 +18,9 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>main-service</module>
 		<module>stat</module>
+		<module>core</module>
+		<module>infra</module>
 	</modules>
 
 	<properties>
@@ -27,6 +28,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<querydsl.version>5.1.0</querydsl.version>
 		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+		<spring-cloud-dependencies.version>2023.0.3</spring-cloud-dependencies.version>
 	</properties>
 
 	<dependencyManagement>
@@ -46,6 +48,13 @@
 				<artifactId>querydsl-jpa</artifactId>
 				<classifier>jakarta</classifier>
 				<version>${querydsl.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud-dependencies.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
