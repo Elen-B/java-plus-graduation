@@ -39,10 +39,9 @@ public class StatsClientImpl implements StatClient {
                            RestTemplateBuilder builder) {
         this.discoveryClient = discoveryClient;
         this.statsServiceId = statsServiceId;
-        log.info(" getInstances {}", discoveryClient.getInstances(statsServiceId)
-                .getFirst().getUri());
+        log.info(" statsServiceId =  {}", statsServiceId);
         this.rest = builder
-                .uriTemplateHandler(new DefaultUriBuilderFactory())
+                .uriTemplateHandler(new DefaultUriBuilderFactory("http://localhost:9090"))
                 .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
                 .build();
 
@@ -131,6 +130,7 @@ public class StatsClientImpl implements StatClient {
 
     private URI makeUri(String path) {
         ServiceInstance instance = retryTemplate.execute(cxt -> getInstance(statsServiceId));
+        log.info("instance.getHost() = {} instance.getPort() = {}", instance.getHost(), instance.getPort());
         return URI.create("http://" + instance.getHost() + ":" + instance.getPort() + path);
     }
 
