@@ -170,7 +170,7 @@ public class EventServiceImpl implements EventService {
         EventFullDto eventDto = eventMapper.toFullDto(event);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
         populateWithStats(List.of(eventDto));
-        eventDto.setViews(eventDto.getViews()+1);
+        eventDto.setViews(eventDto.getViews() + 1);
 
         hitStat(request);
         return eventDto;
