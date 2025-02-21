@@ -6,19 +6,21 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    defer-datasource-initialization: true
   sql:
     init:
       mode: always
-      schema-locations: classpath:schema.sql
   output:
     ansi:
       enabled: ALWAYS
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/ewm-stats
+    driver-class-name: org.h2.Driver;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    url: jdbc:h2:mem:ewm-stats
     username: root
     password: root
-    initialization-mode: always
+  h2:
+    console:
+      enabled: true
 
 logging:
   level:
