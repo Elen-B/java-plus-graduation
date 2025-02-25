@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventAdminFilterParamsDto;
 import ru.practicum.ewm.event.dto.UpdateEventAdminRequestDto;
-import ru.practicum.ewm.event.service.EventService;
+import ru.practicum.ewm.event.facade.EventFacade;
 
 import java.util.List;
 
@@ -16,18 +16,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping(path = "/admin/events")
 public class AdminEventController {
-    private final EventService eventService;
+    private final EventFacade eventFacade;
 
     @PatchMapping("/{eventId}")
     public EventFullDto update(@PathVariable Long eventId,
                                @Valid @RequestBody UpdateEventAdminRequestDto updateEventAdminRequestDto) {
-        return eventService.update(eventId, updateEventAdminRequestDto);
+        return eventFacade.update(eventId, updateEventAdminRequestDto);
     }
 
     @GetMapping
     public List<EventFullDto> get(@Valid EventAdminFilterParamsDto filters,
                                   @PositiveOrZero @RequestParam(defaultValue = "0") int from,
                                   @Positive @RequestParam(defaultValue = "10") int size) {
-        return eventService.get(filters, from, size);
+        return eventFacade.get(filters, from, size);
     }
 }

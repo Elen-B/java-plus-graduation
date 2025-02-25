@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.core.util.DateTimeUtil;
+import ru.practicum.ewm.util.DateTimeUtil;
 import ru.practicum.ewm.core.validation.NullOrNotBlank;
 import ru.practicum.ewm.event.model.EventStateActionPrivate;
 import ru.practicum.ewm.location.dto.NewLocationDto;

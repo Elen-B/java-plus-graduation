@@ -6,12 +6,10 @@ import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.location.mapper.LocationMapper;
 import ru.practicum.ewm.location.model.Location;
-import ru.practicum.ewm.user.mapper.UserMapper;
-import ru.practicum.ewm.user.model.User;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {LocationMapper.class, UserMapper.class})
+@Mapper(componentModel = "spring", uses = {LocationMapper.class})
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
@@ -31,18 +29,18 @@ public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
-    @Mapping(target = "initiator", source = "userFromRequest")
+    @Mapping(target = "initiatorId", source = "userId")
     @Mapping(target = "location", source = "location")
     @Mapping(target = "participantLimit", defaultValue = "0")
     @Mapping(target = "paid", defaultValue = "false")
     @Mapping(target = "requestModeration", defaultValue = "true")
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
-    Event toEvent(NewEventDto newEventDto, Category category, User userFromRequest, Location location);
+    Event toEvent(NewEventDto newEventDto, Category category, Long userId, Location location);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
-    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "location", source = "location")
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
@@ -51,7 +49,7 @@ public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
-    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "location", source = "location")
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)

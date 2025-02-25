@@ -13,7 +13,7 @@ import ru.practicum.ewm.compilation.dto.UpdateCompilationRequestDto;
 import ru.practicum.ewm.compilation.mapper.CompilationMapper;
 import ru.practicum.ewm.compilation.model.Compilation;
 import ru.practicum.ewm.compilation.repository.CompilationRepository;
-import ru.practicum.ewm.core.error.exception.NotFoundException;
+import ru.practicum.ewm.error.exception.NotFoundException;
 import ru.practicum.ewm.core.util.PagingUtil;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
