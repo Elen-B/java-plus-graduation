@@ -5,7 +5,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import ru.practicum.ewm.util.DateTimeUtil;
 import ru.practicum.ewm.event.model.EventStates;
-import ru.practicum.ewm.location.dto.LocationDto;
+import ru.practicum.ewm.dto.location.LocationDto;
 
 import java.time.LocalDateTime;
 

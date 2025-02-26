@@ -10,7 +10,7 @@ import ru.practicum.ewm.categories.mapper.CategoryMapper;
 import ru.practicum.ewm.categories.model.Category;
 import ru.practicum.ewm.categories.repository.CategoriesRepository;
 import ru.practicum.ewm.error.exception.NotFoundException;
-import ru.practicum.ewm.core.util.PagingUtil;
+import ru.practicum.ewm.util.PagingUtil;
 
 import java.util.List;
 

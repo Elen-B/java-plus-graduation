@@ -2,14 +2,13 @@ package ru.practicum.ewm.event.mapper;
 
 import org.mapstruct.*;
 import ru.practicum.ewm.categories.model.Category;
+import ru.practicum.ewm.dto.location.LocationDto;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.location.mapper.LocationMapper;
-import ru.practicum.ewm.location.model.Location;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {LocationMapper.class})
+@Mapper(componentModel = "spring")
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
@@ -18,6 +17,12 @@ public interface EventMapper {
 
     @IterableMapping(qualifiedByName = "EventShortDto")
     List<EventShortDto> toShortDto(Iterable<Event> event);
+
+    @Mapping(target = "confirmedRequests", ignore = true)
+    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "id", source = "event.id")
+    @Mapping(target = "location", source = "location")
+    EventFullDto toFullDto(Event event, LocationDto location);
 
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
@@ -30,29 +35,29 @@ public interface EventMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "initiatorId", source = "userId")
-    @Mapping(target = "location", source = "location")
+    @Mapping(target = "locationId", source = "locationId")
     @Mapping(target = "participantLimit", defaultValue = "0")
     @Mapping(target = "paid", defaultValue = "false")
     @Mapping(target = "requestModeration", defaultValue = "true")
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
-    Event toEvent(NewEventDto newEventDto, Category category, Long userId, Location location);
+    Event toEvent(NewEventDto newEventDto, Category category, Long userId, Long locationId);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "initiatorId", ignore = true)
-    @Mapping(target = "location", source = "location")
+    @Mapping(target = "locationId", source = "locationId")
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Event update(@MappingTarget Event event, UpdateEventUserRequestDto eventUpdateDto, Location location);
+    Event update(@MappingTarget Event event, UpdateEventUserRequestDto eventUpdateDto, Long locationId);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "initiatorId", ignore = true)
-    @Mapping(target = "location", source = "location")
+    @Mapping(target = "locationId", source = "locationId")
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Event update(@MappingTarget Event event, UpdateEventAdminRequestDto eventUpdateDto, Category category, Location location);
+    Event update(@MappingTarget Event event, UpdateEventAdminRequestDto eventUpdateDto, Category category, Long locationId);
 }

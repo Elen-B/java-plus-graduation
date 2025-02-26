@@ -20,19 +20,16 @@ import org.springframework.data.querydsl.QSort;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.categories.model.Category;
 import ru.practicum.ewm.categories.repository.CategoriesRepository;
+import ru.practicum.ewm.dto.location.LocationDto;
 import ru.practicum.ewm.error.exception.ConflictDataException;
 import ru.practicum.ewm.error.exception.NotFoundException;
 import ru.practicum.ewm.error.exception.ValidationException;
 import ru.practicum.ewm.util.DateTimeUtil;
-import ru.practicum.ewm.core.util.PagingUtil;
+import ru.practicum.ewm.util.PagingUtil;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.mapper.EventMapper;
-import ru.practicum.ewm.location.dto.NewLocationDto;
-import ru.practicum.ewm.location.mapper.LocationMapper;
 import ru.practicum.ewm.event.model.*;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.location.repository.LocationRepository;
-import ru.practicum.ewm.location.model.Location;
 import ru.practicum.ewm.participationrequest.dto.ParticipationRequestDto;
 import ru.practicum.ewm.participationrequest.mapper.ParticipationRequestMapper;
 import ru.practicum.ewm.participationrequest.model.ParticipationRequest;
@@ -53,9 +50,7 @@ import static com.querydsl.core.group.GroupBy.groupBy;
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final CategoriesRepository categoriesRepository;
-    private final LocationRepository locationRepository;
     private final EventMapper eventMapper;
-    private final LocationMapper locationMapper;
     private final ParticipationRequestRepository participationRequestRepository;
     private final ParticipationRequestMapper participationRequestMapper;
     private final EntityManager entityManager;
@@ -68,13 +63,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto addEvent(Long id, NewEventDto newEventDto) {
+    public EventFullDto addEvent(Long id, NewEventDto newEventDto, LocationDto location) {
         checkEventTime(newEventDto.getEventDate());
         Category category = categoriesRepository.findById(newEventDto.getCategory()).get();
-        Location location = getOrCreateLocation(newEventDto.getLocation());
 
-        Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, id, location));
-        return eventMapper.toFullDto(event);
+        Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, id, location.getId()));
+        return eventMapper.toFullDto(event, location);
     }
 
     @Override
@@ -100,7 +94,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequestDto eventUpdateDto) {
+    public EventFullDto updateEvent(Long userId, Long eventId, LocationDto location, UpdateEventUserRequestDto eventUpdateDto) {
         Event event = checkAndGetEventByIdAndInitiatorId(eventId, userId);
 
         if (event.getState() == EventStates.PUBLISHED)
@@ -109,7 +103,7 @@ public class EventServiceImpl implements EventService {
                                     "Event with id %s can't be changed because it is published.", event.getId()));
         checkEventTime(eventUpdateDto.getEventDate());
 
-        eventMapper.update(event, eventUpdateDto, getOrCreateLocation(eventUpdateDto.getLocation()));
+        eventMapper.update(event, eventUpdateDto, location.getId());
         if (eventUpdateDto.getStateAction() != null) {
             setStateToEvent(eventUpdateDto, event);
         }
@@ -117,7 +111,7 @@ public class EventServiceImpl implements EventService {
 
         event = eventRepository.save(event);
 
-        EventFullDto eventDto = eventMapper.toFullDto(event);
+        EventFullDto eventDto = eventMapper.toFullDto(event, location);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
 
         return eventDto;
@@ -125,7 +119,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto update(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto) {
+    public EventFullDto update(Long eventId, LocationDto location, UpdateEventAdminRequestDto updateEventAdminRequestDto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("On Event admin update - Event doesn't exist with id: " + eventId));
 
@@ -135,12 +129,11 @@ public class EventServiceImpl implements EventService {
                     .orElseThrow(() -> new NotFoundException("On Event admin update - Category doesn't exist with id: " +
                             updateEventAdminRequestDto.getCategory()));
 
-        event = eventMapper.update(event, updateEventAdminRequestDto, category,
-                getOrCreateLocation(updateEventAdminRequestDto.getLocation()));
+        event = eventMapper.update(event, updateEventAdminRequestDto, category, location.getId());
         calculateNewEventState(event, updateEventAdminRequestDto.getStateAction());
 
         event = eventRepository.save(event);
-        EventFullDto eventDto = eventMapper.toFullDto(event);
+        EventFullDto eventDto = eventMapper.toFullDto(event, location);
         populateWithConfirmedRequests(List.of(event), List.of(eventDto));
 
         log.info("Event is updated by admin: {}", event);
@@ -192,7 +185,12 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> get(EventPublicFilterParamsDto filters, int from, int size, HttpServletRequest request) {
+    public List<EventShortDto> get(
+            EventPublicFilterParamsDto filters,
+            int from,
+            int size,
+            List<LocationDto> locations,
+            HttpServletRequest request) {
         QEvent qEvent = QEvent.event;
 
         BooleanBuilder builder = new BooleanBuilder();
@@ -220,12 +218,15 @@ public class EventServiceImpl implements EventService {
         }
 
         if (filters.getLon() != null && filters.getLat() != null)
+            builder.and(qEvent.locationId.in(locations.stream().map(LocationDto::getId).toList()));
+
+/*        if (filters.getLon() != null && filters.getLat() != null)
             builder.and(Expressions.booleanTemplate("distance({0}, {1}, {2}, {3}) <= {4}",
                     qEvent.location.lat,
                     qEvent.location.lon,
                     filters.getLat(),
                     filters.getLon(),
-                    filters.getRadius()));
+                    filters.getRadius()));*/
 
         PageRequest page = PagingUtil.pageOf(from, size);
         if (filters.getSort() != null && filters.getSort() == EventPublicFilterParamsDto.EventSort.EVENT_DATE)
@@ -311,11 +312,6 @@ public class EventServiceImpl implements EventService {
                     .toList());
         }
         return null;
-    }
-
-    private Location getOrCreateLocation(NewLocationDto newLocationDto) {
-        return newLocationDto == null ? null : locationRepository.findByLatAndLon(newLocationDto.getLat(), newLocationDto.getLon())
-                .orElseGet(() -> locationRepository.save(locationMapper.toLocation(newLocationDto)));
     }
 
     private void calculateNewEventState(Event event, EventStateActionAdmin stateAction) {

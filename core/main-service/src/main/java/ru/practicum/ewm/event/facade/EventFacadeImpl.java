@@ -4,11 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.ewm.client.LocationClient;
 import ru.practicum.ewm.client.UserClient;
+import ru.practicum.ewm.dto.location.LocationDto;
+import ru.practicum.ewm.dto.location.NewLocationDto;
 import ru.practicum.ewm.dto.user.UserShortDto;
 import ru.practicum.ewm.error.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.*;
-import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.participationrequest.dto.ParticipationRequestDto;
 import ru.practicum.ewm.util.DateTimeUtil;
@@ -18,10 +20,7 @@ import ru.practicum.stats.dto.StatsDto;
 import ru.practicum.stats.dto.StatsRequestParamsDto;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,17 +29,18 @@ import java.util.stream.Collectors;
 public class EventFacadeImpl implements EventFacade {
     private final UserClient userClient;
     private final StatClient statClient;
+    private final LocationClient locationClient;
 
     private final EventService eventService;
-    private final EventMapper eventMapper;
 
     private static final String appNameForStat = "ewm-main-service";
 
     @Override
     public EventFullDto addEvent(Long id, NewEventDto newEventDto) {
         UserShortDto user = getUserById(id);
+        LocationDto location = locationClient.addOrGetLocation(getLocation(newEventDto.getLocation()));
 
-        return eventService.addEvent(user.getId(), newEventDto);
+        return eventService.addEvent(user.getId(), newEventDto, location);
     }
 
     @Override
@@ -60,7 +60,9 @@ public class EventFacadeImpl implements EventFacade {
 
     @Override
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequestDto eventUpdateDto) {
-        EventFullDto eventDto = eventService.updateEvent(userId, eventId, eventUpdateDto);
+        LocationDto location = locationClient.addOrGetLocation(getLocation(eventUpdateDto.getLocation()));
+
+        EventFullDto eventDto = eventService.updateEvent(userId, eventId, location, eventUpdateDto);
         populateWithStats(List.of(eventDto));
 
         return eventDto;
@@ -68,7 +70,9 @@ public class EventFacadeImpl implements EventFacade {
 
     @Override
     public EventFullDto update(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto) {
-        EventFullDto eventDto = eventService.update(eventId, updateEventAdminRequestDto);
+        LocationDto location = locationClient.addOrGetLocation(getLocation(updateEventAdminRequestDto.getLocation()));
+
+        EventFullDto eventDto = eventService.update(eventId, location, updateEventAdminRequestDto);
         populateWithStats(List.of(eventDto));
 
         return eventDto;
@@ -93,7 +97,8 @@ public class EventFacadeImpl implements EventFacade {
 
     @Override
     public List<EventShortDto> get(EventPublicFilterParamsDto filters, int from, int size, HttpServletRequest request) {
-        List<EventShortDto> eventsDto = eventService.get(filters, from, size, request);
+        List<LocationDto> locations = getLocationsByRadius(filters.getLat(), filters.getLon(), filters.getRadius());
+        List<EventShortDto> eventsDto = eventService.get(filters, from, size, locations, request);
         populateWithStats(eventsDto);
 
         if (filters.getSort() != null && filters.getSort() == EventPublicFilterParamsDto.EventSort.VIEWS)
@@ -151,5 +156,23 @@ public class EventFacadeImpl implements EventFacade {
                 .ip(request.getRemoteAddr())
                 .timestamp(DateTimeUtil.currentDateTime())
                 .build());
+    }
+
+    private List<LocationDto> getLocationsByRadius(Double lat, Double lon, Double radius) {
+        if (lat == null || lon == null) {
+            return Collections.emptyList();
+        }
+
+        return locationClient.getByRadius(lat, lon, radius);
+    }
+
+    private NewLocationDto getLocation(NewLocationDto newLocationDto) {
+        if (newLocationDto != null) {
+            return newLocationDto;
+        }
+        return NewLocationDto.builder()
+                .lat(0D)
+                .lon(0D)
+                .build();
     }
 }

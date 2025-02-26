@@ -4,7 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.ewm.util.DateTimeUtil;
-import ru.practicum.ewm.core.validation.DateTimeRange;
+import ru.practicum.ewm.validation.DateTimeRange;
 import ru.practicum.ewm.event.model.EventStates;
 
 import java.time.LocalDateTime;

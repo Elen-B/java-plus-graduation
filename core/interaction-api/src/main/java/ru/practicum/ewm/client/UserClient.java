@@ -9,5 +9,4 @@ public interface UserClient {
 
     @GetMapping("/{userId}")
     UserShortDto getById(@PathVariable  Long userId);
-
 }
