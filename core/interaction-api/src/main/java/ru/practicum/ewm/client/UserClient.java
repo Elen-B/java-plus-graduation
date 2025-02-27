@@ -13,5 +13,5 @@ public interface UserClient {
     UserShortDto getById(@PathVariable  Long userId);
 
     @GetMapping
-    List<UserShortDto> getByIds(@RequestParam(name="id") List<Long> ids);
+    List<UserShortDto> getByIds(@RequestParam(name = "id") List<Long> ids);
 }
