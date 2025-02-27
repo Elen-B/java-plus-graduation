@@ -9,6 +9,8 @@ import ru.practicum.ewm.client.UserClient;
 import ru.practicum.ewm.dto.user.UserShortDto;
 import ru.practicum.ewm.service.UserService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(path = "/internal/api/users")
 @RequiredArgsConstructor
@@ -19,5 +21,10 @@ public class ClientController implements UserClient {
     @GetMapping("/{userId}")
     public UserShortDto getById(@PathVariable Long userId) {
         return userService.getById(userId);
+    }
+
+    @Override
+    public List<UserShortDto> getByIds(List<Long> ids) {
+        return userService.getUsers(ids);
     }
 }

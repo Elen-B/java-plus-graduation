@@ -1,10 +1,7 @@
 package ru.practicum.ewm.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.location.LocationDto;
 import ru.practicum.ewm.dto.location.NewLocationDto;
 
@@ -20,4 +17,7 @@ public interface LocationClient {
     List<LocationDto> getByRadius(@RequestParam(name = "latitude") Double lat,
                                   @RequestParam(name = "longitude") Double lon,
                                   @RequestParam(name = "radius") Double radius);
+
+    @GetMapping("/{locationId}")
+    LocationDto getById(@PathVariable Long locationId);
 }

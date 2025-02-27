@@ -28,4 +28,9 @@ public class ClientController implements LocationClient {
                                          @RequestParam(name = "radius") Double radius) {
         return locationService.getByRadius(lat, lon, radius);
     }
+
+    @Override
+    public LocationDto getById(Long locationId) {
+        return locationService.getById(locationId);
+    }
 }
