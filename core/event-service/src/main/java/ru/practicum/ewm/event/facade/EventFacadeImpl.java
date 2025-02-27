@@ -93,7 +93,10 @@ public class EventFacadeImpl implements EventFacade {
 
     @Override
     public EventFullDto updateEvent(Long userId, Long eventId, UpdateEventUserRequestDto eventUpdateDto) {
-        LocationDto location = locationClient.addOrGetLocation(getLocation(eventUpdateDto.getLocation()));
+        log.info("updateEvent: {}", eventUpdateDto);
+        LocationDto location = eventUpdateDto.getLocation() == null ? null :
+                locationClient.addOrGetLocation(getLocation(eventUpdateDto.getLocation()));
+        log.info("updateEvent new location : {}", location);
         UserShortDto user = getUserById(userId);
 
         Event event = eventService.updateEvent(userId, eventId, location, eventUpdateDto);
@@ -106,8 +109,10 @@ public class EventFacadeImpl implements EventFacade {
 
     @Override
     public EventFullDto update(Long eventId, UpdateEventAdminRequestDto updateEventAdminRequestDto) {
-        LocationDto location = locationClient.addOrGetLocation(getLocation(updateEventAdminRequestDto.getLocation()));
-
+        log.info("update: {}", updateEventAdminRequestDto);
+        LocationDto location = updateEventAdminRequestDto.getLocation() == null ? null :
+                locationClient.addOrGetLocation(getLocation(updateEventAdminRequestDto.getLocation()));
+        log.info("update new location : {}", location);
         Event event = eventService.update(eventId, location, updateEventAdminRequestDto);
         UserShortDto user = getUserById(event.getInitiatorId());
         EventFullDto eventDto = eventMapper.toFullDto(event, location, user);
@@ -226,6 +231,14 @@ public class EventFacadeImpl implements EventFacade {
         return null;
     }
 
+    @Override
+    public List<EventFullDto> getByLocation(Long locationId) {
+        return eventService.getByLocation(locationId)
+                .stream()
+                .map(eventMapper::toFullDto)
+                .toList();
+    }
+
     private UserShortDto getUserById(Long userId) {
         UserShortDto user = userClient.getById(userId);
         if (user == null) {
@@ -297,7 +310,8 @@ public class EventFacadeImpl implements EventFacade {
                 event.setConfirmedRequests(confirmedRequests.getOrDefault(event.getId(), zeroCount).getQuantity()));
 
         if (filterOnlyAvailable != null && filterOnlyAvailable) {
-            eventsDto.removeIf(event -> event.getConfirmedRequests() < 0);
+            eventsDto.removeIf(event -> eventService.getEventById(event.getId()).getParticipantLimit() -
+                    event.getConfirmedRequests() <= 0);
         }
     }
 }

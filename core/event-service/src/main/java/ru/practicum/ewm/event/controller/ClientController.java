@@ -7,6 +7,8 @@ import ru.practicum.ewm.client.EventClient;
 import ru.practicum.ewm.dto.event.EventFullDto;
 import ru.practicum.ewm.event.facade.EventFacade;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(path = "/internal/api/events")
 @RequiredArgsConstructor
@@ -16,5 +18,10 @@ public class ClientController implements EventClient {
     @Override
     public EventFullDto getById(Long eventId) {
         return eventFacade.getEventById(eventId);
+    }
+
+    @Override
+    public List<EventFullDto> getByLocation(Long locationId) {
+        return eventFacade.getByLocation(locationId);
     }
 }

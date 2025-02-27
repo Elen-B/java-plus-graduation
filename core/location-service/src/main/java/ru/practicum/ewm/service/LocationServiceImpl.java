@@ -6,6 +6,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewm.client.EventClient;
+import ru.practicum.ewm.dto.event.EventFullDto;
+import ru.practicum.ewm.error.exception.ConflictDataException;
 import ru.practicum.ewm.error.exception.NotFoundException;
 import ru.practicum.ewm.dto.location.LocationDto;
 import ru.practicum.ewm.dto.location.NewLocationDto;
@@ -22,9 +25,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional(readOnly = true)
-public class LocationServiceImpl implements  LocationService {
+public class LocationServiceImpl implements LocationService {
     LocationRepository locationRepository;
     LocationMapper locationMapper;
+    EventClient eventClient;
 
     @Override
     public List<LocationDto> getLocations(Integer from, Integer size) {
@@ -73,15 +77,22 @@ public class LocationServiceImpl implements  LocationService {
 
     @Override
     public List<LocationDto> getByRadius(Double lat, Double lon, Double radius) {
-        return locationRepository.findAllByRadius(lat, lon, radius)
+        log.info("call getByRadius for lat = {}, lon = {}, radius = {}", lat, lon, radius);
+        List<LocationDto> locationDtos = locationRepository.findAllByRadius(lat, lon, radius)
                 .stream()
                 .map(locationMapper::toDto)
                 .toList();
+        log.info("result locations: {}", locationDtos);
+        return locationDtos;
     }
 
     @Override
     @Transactional
     public void delete(Long locationId) {
+        List<EventFullDto> events = eventClient.getByLocation(locationId);
+        if (!events.isEmpty()) {
+            throw new ConflictDataException("location is used in events");
+        }
         locationRepository.deleteById(locationId);
         log.info("Location deleted with id: {}", locationId);
     }

@@ -29,4 +29,6 @@ public interface EventFacade {
 
     EventRequestStatusUpdateResultDto changeEventState(Long userId, Long eventId,
                                                        EventRequestStatusUpdateRequestDto requestStatusUpdateRequest);
+
+    List<EventFullDto> getByLocation(Long locationId);
 }

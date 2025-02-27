@@ -28,4 +28,6 @@ public interface EventService {
                             HttpServletRequest request);
 
     Event checkAndGetEventByIdAndInitiatorId(Long eventId, Long initiatorId);
+
+    List<Event> getByLocation(Long locationId);
 }

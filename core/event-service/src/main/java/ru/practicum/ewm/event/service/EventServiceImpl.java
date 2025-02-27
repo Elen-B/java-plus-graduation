@@ -44,6 +44,11 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public List<Event> getByLocation(Long locationId) {
+        return eventRepository.findAllByLocationId(locationId);
+    }
+
+    @Override
     @Transactional
     public Event addEvent(Long id, NewEventDto newEventDto, Long locationId) {
         checkEventTime(newEventDto.getEventDate());
@@ -74,6 +79,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public Event updateEvent(Long userId, Long eventId, LocationDto location, UpdateEventUserRequestDto eventUpdateDto) {
         Event event = checkAndGetEventByIdAndInitiatorId(eventId, userId);
+        Long locationId = location == null ? event.getLocationId() : location.getId();
 
         if (event.getState() == EventStates.PUBLISHED)
             throw new ConflictDataException(
@@ -81,7 +87,7 @@ public class EventServiceImpl implements EventService {
                                     "Event with id %s can't be changed because it is published.", event.getId()));
         checkEventTime(eventUpdateDto.getEventDate());
 
-        eventMapper.update(event, eventUpdateDto, location.getId());
+        eventMapper.update(event, eventUpdateDto, locationId);
         if (eventUpdateDto.getStateAction() != null) {
             setStateToEvent(eventUpdateDto, event);
         }
@@ -94,14 +100,14 @@ public class EventServiceImpl implements EventService {
     public Event update(Long eventId, LocationDto location, UpdateEventAdminRequestDto updateEventAdminRequestDto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("On Event admin update - Event doesn't exist with id: " + eventId));
-
+        Long locationId = location == null ? event.getLocationId() : location.getId();
         Category category = null;
         if (updateEventAdminRequestDto.getCategory() != null)
             category = categoriesRepository.findById(updateEventAdminRequestDto.getCategory())
                     .orElseThrow(() -> new NotFoundException("On Event admin update - Category doesn't exist with id: " +
                             updateEventAdminRequestDto.getCategory()));
 
-        event = eventMapper.update(event, updateEventAdminRequestDto, category, location.getId());
+        event = eventMapper.update(event, updateEventAdminRequestDto, category, locationId);
         calculateNewEventState(event, updateEventAdminRequestDto.getStateAction());
 
         event = eventRepository.save(event);
