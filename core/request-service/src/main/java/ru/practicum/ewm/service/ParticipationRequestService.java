@@ -4,7 +4,6 @@ import ru.practicum.ewm.dto.event.EventFullDto;
 import ru.practicum.ewm.dto.request.ParticipationRequestCountDto;
 import ru.practicum.ewm.dto.request.ParticipationRequestDto;
 import ru.practicum.ewm.dto.request.ParticipationRequestStatus;
-import ru.practicum.ewm.model.ParticipationRequest;
 
 import java.util.List;
 
