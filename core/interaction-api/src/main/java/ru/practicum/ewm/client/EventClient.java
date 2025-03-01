@@ -13,6 +13,6 @@ public interface EventClient {
     @GetMapping("/{eventId}")
     EventFullDto getById(@PathVariable Long eventId);
 
-    @GetMapping("/Location/{locationId}")
+    @GetMapping("/location/{locationId}")
     List<EventFullDto> getByLocation(@PathVariable Long locationId);
 }

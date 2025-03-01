@@ -16,16 +16,12 @@ public class ClientController implements LocationClient {
     private final LocationService locationService;
 
     @Override
-    @PostMapping
-    public LocationDto addOrGetLocation(@RequestBody NewLocationDto newLocationDto) {
+    public LocationDto addOrGetLocation(NewLocationDto newLocationDto) {
         return locationService.addOrGetLocation(newLocationDto);
     }
 
     @Override
-    @GetMapping
-    public List<LocationDto> getByRadius(@RequestParam(name = "latitude") Double lat,
-                                         @RequestParam(name = "longitude") Double lon,
-                                         @RequestParam(name = "radius") Double radius) {
+    public List<LocationDto> getByRadius(Double lat, Double lon, Double radius) {
         return locationService.getByRadius(lat, lon, radius);
     }
 

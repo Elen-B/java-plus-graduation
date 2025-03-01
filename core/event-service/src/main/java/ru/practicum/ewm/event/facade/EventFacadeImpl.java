@@ -191,8 +191,6 @@ public class EventFacadeImpl implements EventFacade {
                 .map(ParticipationRequestDto::getId)
                 .toList();
         log.info("idsToChangeStatus: {}", idsToChangeStatus);
-        //Не очень понял, как обрабатывать это условие:
-        // "если для события лимит заявок равен 0 или отключена пре-модерация заявок, то подтверждение заявок не требуется"
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             log.info("Заявки подтверждать не требуется");
             return null;

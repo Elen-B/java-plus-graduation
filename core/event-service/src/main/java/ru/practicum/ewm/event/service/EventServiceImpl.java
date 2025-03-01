@@ -52,7 +52,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public Event addEvent(Long id, NewEventDto newEventDto, Long locationId) {
         checkEventTime(newEventDto.getEventDate());
-        Category category = categoriesRepository.findById(newEventDto.getCategory()).get();
+        Category category = categoriesRepository.findById(newEventDto.getCategory()).orElse(null);
 
         return eventRepository.save(eventMapper.toEvent(newEventDto, category, id, locationId));
     }
@@ -101,11 +101,15 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("On Event admin update - Event doesn't exist with id: " + eventId));
         Long locationId = location == null ? event.getLocationId() : location.getId();
-        Category category = null;
-        if (updateEventAdminRequestDto.getCategory() != null)
+        Category category;
+        if (updateEventAdminRequestDto.getCategory() == null) {
+            throw new ValidationException("category is null");
+        }
+        else {
             category = categoriesRepository.findById(updateEventAdminRequestDto.getCategory())
                     .orElseThrow(() -> new NotFoundException("On Event admin update - Category doesn't exist with id: " +
                             updateEventAdminRequestDto.getCategory()));
+        }
 
         event = eventMapper.update(event, updateEventAdminRequestDto, category, locationId);
         calculateNewEventState(event, updateEventAdminRequestDto.getStateAction());
