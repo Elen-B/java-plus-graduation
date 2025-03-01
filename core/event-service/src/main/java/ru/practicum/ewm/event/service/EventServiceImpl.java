@@ -104,8 +104,7 @@ public class EventServiceImpl implements EventService {
         Category category;
         if (updateEventAdminRequestDto.getCategory() == null) {
             throw new ValidationException("category is null");
-        }
-        else {
+        } else {
             category = categoriesRepository.findById(updateEventAdminRequestDto.getCategory())
                     .orElseThrow(() -> new NotFoundException("On Event admin update - Category doesn't exist with id: " +
                             updateEventAdminRequestDto.getCategory()));
