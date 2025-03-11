@@ -1,38 +1,28 @@
 package ru.practicum.stats.client;
 
+import com.google.protobuf.Timestamp;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.http.*;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.retry.backoff.FixedBackOffPolicy;
-import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
-import org.springframework.retry.support.RetryTemplate;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.DefaultUriBuilderFactory;
-import org.springframework.web.util.UriComponentsBuilder;
+import ru.practicum.grpc.stat.action.ActionTypeProto;
+import ru.practicum.grpc.stat.action.UserActionProto;
+import ru.practicum.grpc.stat.collector.UserActionControllerGrpc;
 import ru.practicum.stats.dto.HitDto;
 import ru.practicum.stats.dto.StatsDto;
 import ru.practicum.stats.dto.StatsRequestParamsDto;
-import ru.practicum.stats.utils.DateTimeUtil;
 
-import java.net.URI;
+import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class StatsClientImpl implements StatClient {
-    private final RestTemplate rest;
-    private final DiscoveryClient discoveryClient;
-    private final RetryTemplate retryTemplate;
-    private final String statsServiceId;
 
+    @GrpcClient("collector")
+    private UserActionControllerGrpc.UserActionControllerBlockingStub userClient;
+/*
     @Autowired
     public StatsClientImpl(DiscoveryClient discoveryClient,
                            @Value("${discovery.services.stats-server-id}") String statsServiceId,
@@ -52,10 +42,10 @@ public class StatsClientImpl implements StatClient {
         MaxAttemptsRetryPolicy retryPolicy = new MaxAttemptsRetryPolicy();
         retryPolicy.setMaxAttempts(3);
         retryTemplate.setRetryPolicy(retryPolicy);
-    }
+    }*/
 
     @Override
-    public void hit(HitDto hitDto) {
+    public void hit(HitDto hitDto) {/*
         HttpEntity<HitDto> requestEntity = new HttpEntity<>(hitDto, defaultHeaders());
         try {
             rest.exchange(makeUri("/hit"), HttpMethod.POST, requestEntity, Object.class);
@@ -63,11 +53,11 @@ public class StatsClientImpl implements StatClient {
             log.error("Hit stats was not successful with code {} and message {}", e.getStatusCode(), e.getMessage(), e);
         } catch (Exception e) {
             log.error("Hit stats was not successful with exception {} and message {}", e.getClass().getName(), e.getMessage(), e);
-        }
+        }*/
     }
 
     @Override
-    public List<StatsDto> get(StatsRequestParamsDto statsRequestParamsDto) {
+    public List<StatsDto> get(StatsRequestParamsDto statsRequestParamsDto) {/*
         if (!checkValidRequestParamsDto(statsRequestParamsDto)) {
             log.error("Get stats was not successful because of incorrect parameters {}", statsRequestParamsDto);
             return List.of();
@@ -99,9 +89,24 @@ public class StatsClientImpl implements StatClient {
             return List.of();
         }
         statServerResponse.getBody();
-        return List.of(Objects.requireNonNull(statServerResponse.getBody()));
+        return List.of(Objects.requireNonNull(statServerResponse.getBody()));*/
+        return List.of();
     }
 
+    @Override
+    public void registerUserAction(long eventId, long userId, ActionTypeProto actionType, Instant instant) {
+        log.info("statsClientImpl registerUserAction");
+        Timestamp timestamp = Timestamp.newBuilder().setNanos(instant.getNano()).build();
+        UserActionProto request = UserActionProto.newBuilder()
+                .setEventId(eventId)
+                .setUserId(userId)
+                .setActionType(actionType)
+                .setTimestamp(timestamp)
+                .build();
+        log.info("statsClientImpl registerUserAction request = {}", request);
+        userClient.collectUserAction(request);
+    }
+/*
     private boolean checkValidRequestParamsDto(StatsRequestParamsDto statsRequestParamsDto) {
         if (statsRequestParamsDto.getStart() == null || statsRequestParamsDto.getEnd() == null
                 || statsRequestParamsDto.getStart().isAfter(statsRequestParamsDto.getEnd())) {
@@ -139,5 +144,5 @@ public class StatsClientImpl implements StatClient {
                     exception
             );
         }
-    }
+    }*/
 }

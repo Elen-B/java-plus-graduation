@@ -20,11 +20,13 @@ import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.dto.request.ParticipationRequestDto;
 import ru.practicum.ewm.util.DateTimeUtil;
+import ru.practicum.grpc.stat.action.ActionTypeProto;
 import ru.practicum.stats.client.StatClient;
 import ru.practicum.stats.dto.HitDto;
 import ru.practicum.stats.dto.StatsDto;
 import ru.practicum.stats.dto.StatsRequestParamsDto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -133,6 +135,9 @@ public class EventFacadeImpl implements EventFacade {
         populateWithStats(List.of(eventDto));
 
         hitStat(request);
+        log.info("...starting statClient.registerUserAction");
+        statClient.registerUserAction(event.getId(), 999L, ActionTypeProto.ACTION_VIEW, Instant.now());
+        log.info("...ended statClient.registerUserAction");
         return eventDto;
     }
 
