@@ -2,6 +2,7 @@ package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.Instant;
@@ -12,23 +13,24 @@ import java.util.Objects;
 @Getter
 @Setter
 @Builder(toBuilder = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserAction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private Long userId;
+    Long userId;
 
-    private Long eventId;
+    Long eventId;
 
     @Enumerated(EnumType.STRING)
-    private ActionType actionType;
+    ActionType actionType;
 
-    private Instant created;
+    Instant created;
 
-    private double weight;
+    double weight;
 
     @Override
     public final boolean equals(Object o) {

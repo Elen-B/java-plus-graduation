@@ -2,6 +2,7 @@ package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.Objects;
@@ -11,18 +12,19 @@ import java.util.Objects;
 @Getter
 @Setter
 @Builder(toBuilder = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @NoArgsConstructor
 public class EventSimilarity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    private Long aeventId;
+    Long aeventId;
 
-    private Long beventId;
+    Long beventId;
 
-    private double score;
+    double score;
 
     @Override
     public final boolean equals(Object o) {

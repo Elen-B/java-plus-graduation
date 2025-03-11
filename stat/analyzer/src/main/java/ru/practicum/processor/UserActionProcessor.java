@@ -11,9 +11,7 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
 import ru.practicum.config.KafkaConfig;
 import ru.practicum.ewm.stat.avro.UserActionAvro;
-import ru.practicum.mapper.Mapper;
-import ru.practicum.model.UserAction;
-import ru.practicum.repository.UserActionRepository;
+import ru.practicum.service.RecommendationService;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -27,7 +25,7 @@ public class UserActionProcessor implements Runnable {
     private final Consumer<String, UserActionAvro> consumer;
     private final KafkaConfig kafkaConfig;
     private final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
-    private final UserActionRepository userActionRepository;
+    private final RecommendationService recommendationService;
 
     @Override
     public void run() {
@@ -65,11 +63,7 @@ public class UserActionProcessor implements Runnable {
 
     private void handleRecord(ConsumerRecord<String, UserActionAvro> consumerRecord) throws InterruptedException {
         log.info("handleRecord {}", consumerRecord);
-        UserAction userAction = Mapper.mapToUserAction(consumerRecord.value());
-
-        userActionRepository.findByUserIdAndEventId(userAction.getUserId(), userAction.getEventId()).ifPresent(
-                oldUserAction -> userAction.setId(oldUserAction.getId()));
-        userActionRepository.save(userAction);
+        recommendationService.saveUserAction(consumerRecord.value());
     }
 
     private void manageOffsets(ConsumerRecord<String, UserActionAvro> consumerRecord,
@@ -80,9 +74,9 @@ public class UserActionProcessor implements Runnable {
                 new OffsetAndMetadata(consumerRecord.offset() + 1)
         );
 
-        if(count % 10 == 0) {
+        if (count % 10 == 0) {
             consumer.commitAsync(currentOffsets, (offsets, exception) -> {
-                if(exception != null) {
+                if (exception != null) {
                     log.warn("Ошибка во время фиксации оффсетов: {}", offsets, exception);
                 }
             });

@@ -6,6 +6,7 @@ import ru.practicum.ewm.dto.event.*;
 import ru.practicum.ewm.dto.location.LocationDto;
 import ru.practicum.ewm.dto.user.UserShortDto;
 import ru.practicum.ewm.event.model.Event;
+import ru.practicum.grpc.stat.request.RecommendedEventProto;
 
 import java.util.List;
 
@@ -61,4 +62,6 @@ public interface EventMapper {
     @Mapping(target = "publishedOn", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     Event update(@MappingTarget Event event, UpdateEventAdminRequestDto eventUpdateDto, Category category, Long locationId);
+
+    RecommendedEventDto map(RecommendedEventProto proto);
 }

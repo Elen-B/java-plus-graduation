@@ -15,6 +15,7 @@ import ru.practicum.ewm.dto.request.ParticipationRequestStatus;
 import ru.practicum.ewm.dto.user.UserShortDto;
 import ru.practicum.ewm.error.exception.ConflictDataException;
 import ru.practicum.ewm.error.exception.NotFoundException;
+import ru.practicum.ewm.error.exception.ValidationException;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.service.EventService;
@@ -31,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -240,6 +242,26 @@ public class EventFacadeImpl implements EventFacade {
                 .stream()
                 .map(eventMapper::toFullDto)
                 .toList();
+    }
+
+    @Override
+    public Stream<RecommendedEventDto> getRecommendations(Long userId, int limit) {
+        return statClient.getRecommendationsForUser(userId, limit)
+                .map(eventMapper::map);
+    }
+
+    @Override
+    public void addLike(Long userId, Long eventId) {
+        Event event = eventService.getEventById(eventId);
+        List<ParticipationRequestDto> participants =  requestClient.getByStatus(
+                eventId, ParticipationRequestStatus.CONFIRMED);
+
+        if (event.getEventDate().isAfter(LocalDateTime.now()) &&
+                participants.stream().noneMatch(participant -> Objects.equals(participant.getRequester(), userId))) {
+            throw new ValidationException("Можно лайкать только посещённые мероприятия");
+        }
+
+        statClient.registerUserAction(eventId, userId, ActionTypeProto.ACTION_LIKE, Instant.now());
     }
 
     private UserShortDto getUserById(Long userId) {

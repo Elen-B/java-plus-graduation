@@ -3,8 +3,10 @@ package ru.practicum.mapper;
 import ru.practicum.ewm.stat.avro.ActionTypeAvro;
 import ru.practicum.ewm.stat.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stat.avro.UserActionAvro;
+import ru.practicum.grpc.stat.request.RecommendedEventProto;
 import ru.practicum.model.ActionType;
 import ru.practicum.model.EventSimilarity;
+import ru.practicum.model.RecommendedEvent;
 import ru.practicum.model.UserAction;
 
 public class Mapper {
@@ -15,7 +17,7 @@ public class Mapper {
                 .eventId(userActionAvro.getEventId())
                 .actionType(toActionType(userActionAvro.getActionType()))
                 .created(userActionAvro.getTimestamp())
-                .weight(1D)
+                .weight(toActionType(userActionAvro.getActionType()).getWeight())
                 .build();
     }
 
@@ -30,5 +32,12 @@ public class Mapper {
                 .score(eventSimilarityAvro.getScore())
                 .build();
 
+    }
+
+    public static RecommendedEventProto mapToRecommendedEventProto(RecommendedEvent recommendedEvent) {
+        return RecommendedEventProto.newBuilder()
+                .setEventId(recommendedEvent.getEventId())
+                .setScore(recommendedEvent.getScore())
+                .build();
     }
 }

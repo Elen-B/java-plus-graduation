@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.event.EventFullDto;
 import ru.practicum.ewm.dto.event.EventPublicFilterParamsDto;
 import ru.practicum.ewm.dto.event.EventShortDto;
+import ru.practicum.ewm.dto.event.RecommendedEventDto;
 import ru.practicum.ewm.event.facade.EventFacade;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,5 +32,17 @@ public class PublicEventController {
                                    @Positive @RequestParam(defaultValue = "10") int size,
                                    HttpServletRequest request) {
         return eventFacade.get(filters, from, size, request);
+    }
+
+    @GetMapping("/recommendations")
+    public Stream<RecommendedEventDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId,
+                                                          @PositiveOrZero @RequestParam(defaultValue = "10") int limit) {
+        return eventFacade.getRecommendations(userId, limit);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void addLike(@RequestHeader("X-EWM-USER-ID") Long userId,
+                        @PathVariable("eventId") Long eventId) {
+        eventFacade.addLike(userId, eventId);
     }
 }
