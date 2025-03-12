@@ -61,7 +61,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         Optional<UserAction> oldUserAction = userActionRepository.findByUserIdAndEventId(userAction.getUserId(), userAction.getEventId());
         if (oldUserAction.isPresent()) {
             userAction.setId(oldUserAction.get().getId());
-            if (userAction.getWeight() > oldUserAction.get().getWeight()) {
+            if (userAction.getWeight() < oldUserAction.get().getWeight()) {
                 userAction.setWeight(oldUserAction.get().getWeight());
             }
         }
