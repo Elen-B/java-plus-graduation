@@ -11,5 +11,7 @@ public interface SimilarityService {
 
     void collectEventSimilarity(EventSimilarityAvro eventSimilarityAvro);
 
-    default void close() {}
+    default void close() {
+
+    }
 }
