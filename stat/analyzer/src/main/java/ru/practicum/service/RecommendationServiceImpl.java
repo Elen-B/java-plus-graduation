@@ -24,7 +24,7 @@ import static java.util.Collections.emptyList;
 @RequiredArgsConstructor
 @Slf4j
 public class RecommendationServiceImpl implements RecommendationService {
-    private final long EVENT_COUNT_PREDICTION = 5;
+    private static final long EVENT_COUNT_PREDICTION = 5;
     private final EventSimilarityRepository eventSimilarityRepository;
     private final UserActionRepository userActionRepository;
 
@@ -38,8 +38,8 @@ public class RecommendationServiceImpl implements RecommendationService {
             return emptyList();
         }
 
-        List<RecommendedEvent> RecommendedEvents = new ArrayList<>();
-        lastUserEvents.forEach(event -> RecommendedEvents.addAll(
+        List<RecommendedEvent> recommendedEvents = new ArrayList<>();
+        lastUserEvents.forEach(event -> recommendedEvents.addAll(
                 getSimilarEvents(request.getUserId(), event.getEventId(), request.getMaxResults())
                         .stream()
                         .sorted(Comparator.comparingDouble(EventSimilarity::getScore).reversed())
@@ -47,11 +47,11 @@ public class RecommendationServiceImpl implements RecommendationService {
                         .map(similarEvent -> genRecommendedEventFrom(similarEvent, event.getEventId()))
                         .toList()));
 
-        List<RecommendedEvent> limitRecommendedEvents = RecommendedEvents.stream()
+        List<RecommendedEvent> limitRecommendedEvents = recommendedEvents.stream()
                 .sorted(Comparator.comparingDouble(RecommendedEvent::getScore).reversed())
                 .limit(request.getMaxResults())
                 .toList();
-        log.info("RecommendedEvents: {}", RecommendedEvents);
+        log.info("RecommendedEvents: {}", recommendedEvents);
         limitRecommendedEvents.forEach(
                 event -> event.setScore(getPrediction(event.getEventId(), request.getUserId()))
         );

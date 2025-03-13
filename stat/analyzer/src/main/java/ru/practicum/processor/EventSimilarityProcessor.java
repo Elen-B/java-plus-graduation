@@ -82,9 +82,9 @@ public class EventSimilarityProcessor implements Runnable {
                 new OffsetAndMetadata(consumerRecord.offset() + 1)
         );
 
-        if(count % 10 == 0) {
+        if (count % 10 == 0) {
             consumer.commitAsync(currentOffsets, (offsets, exception) -> {
-                if(exception != null) {
+                if (exception != null) {
                     log.warn("Ошибка во время фиксации оффсетов: {}", offsets, exception);
                 }
             });
