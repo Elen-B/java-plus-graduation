@@ -22,6 +22,7 @@ import ru.practicum.ewm.event.service.EventService;
 import ru.practicum.ewm.dto.request.ParticipationRequestDto;
 import ru.practicum.grpc.stat.action.ActionTypeProto;
 import ru.practicum.stats.client.StatClient;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -141,7 +142,7 @@ public class EventFacadeImpl implements EventFacade {
     public List<EventFullDto> get(EventAdminFilterParamsDto filters, int from, int size) {
         List<Event> events = eventService.get(filters, from, size);
 
-        List<EventFullDto> eventsDto =  new ArrayList<>(eventMapper.toFullDto(events));
+        List<EventFullDto> eventsDto = new ArrayList<>(eventMapper.toFullDto(events));
 
         populateWithConfirmedRequests(events, eventsDto);
         populateWithStats(eventsDto);
@@ -246,7 +247,7 @@ public class EventFacadeImpl implements EventFacade {
     @Override
     public void addLike(Long userId, Long eventId) {
         Event event = eventService.getEventById(eventId);
-        List<ParticipationRequestDto> participants =  requestClient.getByStatus(
+        List<ParticipationRequestDto> participants = requestClient.getByStatus(
                 eventId, ParticipationRequestStatus.CONFIRMED);
 
         if (event.getEventDate().isAfter(LocalDateTime.now()) &&
@@ -275,8 +276,8 @@ public class EventFacadeImpl implements EventFacade {
                 .map(eventMapper::map)
                 .collect(Collectors.toMap(RecommendedEventDto::getEventId, RecommendedEventDto::getScore));
         log.info("ratedEvents are: {}", ratedEvents);
-        eventsDto.forEach(event ->Optional.ofNullable(ratedEvents.get(event.getId()))
-                        .ifPresent(event::setRating));
+        eventsDto.forEach(event -> Optional.ofNullable(ratedEvents.get(event.getId()))
+                .ifPresent(event::setRating));
     }
 
     private List<LocationDto> getLocationsByRadius(Double lat, Double lon, Double radius) {
@@ -306,7 +307,7 @@ public class EventFacadeImpl implements EventFacade {
         List<Long> ids = eventsDto.stream()
                 .map(EventShortDto::getId)
                 .toList();
-        Map<Long, ParticipationRequestCountDto> confirmedRequests =  requestClient.getConfirmedCount(ids)
+        Map<Long, ParticipationRequestCountDto> confirmedRequests = requestClient.getConfirmedCount(ids)
                 .stream()
                 .collect(Collectors.toMap(ParticipationRequestCountDto::getEventId, Function.identity()));
         ParticipationRequestCountDto zeroCount = new ParticipationRequestCountDto(0L, 0L);
