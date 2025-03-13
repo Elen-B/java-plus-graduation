@@ -13,7 +13,7 @@ import ru.practicum.grpc.stat.collector.UserActionControllerGrpc;
 @GrpcService
 @Slf4j
 @RequiredArgsConstructor
-public class ActionController extends UserActionControllerGrpc.UserActionControllerImplBase{
+public class ActionController extends UserActionControllerGrpc.UserActionControllerImplBase {
     private final ActionService actionService;
 
     @Override

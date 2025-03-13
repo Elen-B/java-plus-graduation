@@ -16,6 +16,7 @@ import ru.practicum.config.KafkaConfig;
 public class ActionServiceImpl implements ActionService {
     private final Producer<String, SpecificRecordBase> producer;
     private final KafkaConfig kafkaConfig;
+
     @Override
     public void collectUserAction(UserAction userAction) {
         log.info("ActionService: call collectUserAction for UserAction = {}", userAction);
@@ -40,6 +41,5 @@ public class ActionServiceImpl implements ActionService {
                         metadata.topic(), metadata.partition(), metadata.offset());
             }
         });
-        //producer.send(rec);
     }
 }
