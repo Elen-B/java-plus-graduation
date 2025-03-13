@@ -18,7 +18,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -39,7 +38,7 @@ public class AggregationStarter {
                         .poll(Duration.ofMillis(kafkaConfig.getKafkaProperties().getConsumeAttemptTimeout()));
                 int count = 0;
                 for (ConsumerRecord<String, UserActionAvro> record : records) {
-                    log.info("UserActionAvro got from consumer: {}" ,record);
+                    log.info("UserActionAvro got from consumer: {}", record);
                     handleRecord(record);
                     manageOffsets(record, count, consumer);
                     count++;
@@ -66,8 +65,10 @@ public class AggregationStarter {
     }
 
     private void handleRecord(ConsumerRecord<String, UserActionAvro> consumerRecord) throws InterruptedException {
-        Optional<EventSimilarityAvro> eventSimilarity = similarityService.updateSimilarity(consumerRecord.value());
-        eventSimilarity.ifPresent(similarityService::collectEventSimilarity);
+        List<EventSimilarityAvro> eventSimilarityList = similarityService.updateSimilarity(consumerRecord.value());
+        for (EventSimilarityAvro eventSimilarity : eventSimilarityList) {
+            similarityService.collectEventSimilarity(eventSimilarity);
+        }
     }
 
     private void manageOffsets(ConsumerRecord<String, UserActionAvro> consumerRecord, int count, Consumer<String, UserActionAvro> consumer) {
@@ -76,9 +77,9 @@ public class AggregationStarter {
                 new OffsetAndMetadata(consumerRecord.offset() + 1)
         );
 
-        if(count % 10 == 0) {
+        if (count % 10 == 0) {
             consumer.commitAsync(currentOffsets, (offsets, exception) -> {
-                if(exception != null) {
+                if (exception != null) {
                     log.warn("Ошибка во время фиксации оффсетов: {}", offsets, exception);
                 }
             });

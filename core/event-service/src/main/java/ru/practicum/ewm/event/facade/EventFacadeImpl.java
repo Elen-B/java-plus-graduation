@@ -122,7 +122,7 @@ public class EventFacadeImpl implements EventFacade {
     }
 
     @Override
-    public EventFullDto get(Long eventId, HttpServletRequest request) {
+    public EventFullDto get(Long eventId, Long userId, HttpServletRequest request) {
         Event event = eventService.get(eventId, request);
         UserShortDto user = getUserById(event.getInitiatorId());
         LocationDto location = locationClient.getById(event.getLocationId());
@@ -132,7 +132,7 @@ public class EventFacadeImpl implements EventFacade {
         populateWithStats(List.of(eventDto));
 
         log.info("...starting statClient.registerUserAction");
-        statClient.registerUserAction(event.getId(), 999L, ActionTypeProto.ACTION_VIEW, Instant.now());
+        statClient.registerUserAction(event.getId(), userId, ActionTypeProto.ACTION_VIEW, Instant.now());
         log.info("...ended statClient.registerUserAction");
         return eventDto;
     }

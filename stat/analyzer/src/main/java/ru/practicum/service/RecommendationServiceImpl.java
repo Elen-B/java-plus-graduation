@@ -15,34 +15,54 @@ import ru.practicum.repository.EventSimilarityRepository;
 import ru.practicum.repository.UserActionRepository;
 import ru.practicum.mapper.Mapper;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Collections.emptyList;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RecommendationServiceImpl implements RecommendationService {
+    private final long EVENT_COUNT_PREDICTION = 5;
     private final EventSimilarityRepository eventSimilarityRepository;
     private final UserActionRepository userActionRepository;
 
     @Override
     public List<RecommendedEventProto> generateRecommendationsForUser(UserPredictionsRequestProto request) {
-        return List.of(RecommendedEventProto.newBuilder().setEventId(1L).setScore(3.3D).build());
+        List<UserAction> lastUserEvents = userActionRepository.findByUserIdOrderByCreatedDescLimitedTo(
+                request.getUserId(), request.getMaxResults()
+        );
+
+        if (lastUserEvents.isEmpty()) {
+            return emptyList();
+        }
+
+        List<RecommendedEvent> RecommendedEvents = new ArrayList<>();
+        lastUserEvents.forEach(event -> RecommendedEvents.addAll(
+                getSimilarEvents(request.getUserId(), event.getEventId(), request.getMaxResults())
+                        .stream()
+                        .sorted(Comparator.comparingDouble(EventSimilarity::getScore).reversed())
+                        .limit(request.getMaxResults())
+                        .map(similarEvent -> genRecommendedEventFrom(similarEvent, event.getEventId()))
+                        .toList()));
+
+        List<RecommendedEvent> limitRecommendedEvents = RecommendedEvents.stream()
+                .sorted(Comparator.comparingDouble(RecommendedEvent::getScore).reversed())
+                .limit(request.getMaxResults())
+                .toList();
+        log.info("RecommendedEvents: {}", RecommendedEvents);
+        limitRecommendedEvents.forEach(
+                event -> event.setScore(getPrediction(event.getEventId(), request.getUserId()))
+        );
+        return limitRecommendedEvents.stream()
+                .map(Mapper::mapToRecommendedEventProto)
+                .toList();
     }
 
     @Override
     public List<RecommendedEventProto> getSimilarEvents(SimilarEventsRequestProto request) {
-        List<EventSimilarity> events = eventSimilarityRepository.findAllByEvent(request.getEventId());
-        List<UserAction> actions = userActionRepository.findAllByUserId(request.getUserId());
-
-        return events.stream()
-                .filter(event -> actions.stream().noneMatch(action ->
-                        Objects.equals(action.getEventId(), event.getAeventId()) ||
-                                Objects.equals(action.getEventId(), event.getBeventId())))
-                .sorted(Comparator.comparingDouble(EventSimilarity::getScore).reversed())
-                .limit(request.getMaxResults())
+        return getSimilarEvents(request.getUserId(), request.getEventId(), request.getMaxResults()).stream()
                 .map(event -> genRecommendedEventProtoFrom(event, request.getEventId()))
                 .toList();
     }
@@ -58,6 +78,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Override
     public void saveUserAction(UserActionAvro userActionAvro) {
         UserAction userAction = Mapper.mapToUserAction(userActionAvro);
+        log.info("call saveUserAction for userActionAvro: {}", userActionAvro);
         Optional<UserAction> oldUserAction = userActionRepository.findByUserIdAndEventId(userAction.getUserId(), userAction.getEventId());
         if (oldUserAction.isPresent()) {
             userAction.setId(oldUserAction.get().getId());
@@ -65,6 +86,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                 userAction.setWeight(oldUserAction.get().getWeight());
             }
         }
+        log.info("new UserAction is: {}", userAction);
         userActionRepository.save(userAction);
     }
 
@@ -86,5 +108,46 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .setEventId(recommendedEventId)
                 .setScore(eventSimilarity.getScore())
                 .build();
+    }
+
+    private List<EventSimilarity> getSimilarEvents(Long userId, Long eventId, Long limit) {
+        List<EventSimilarity> events = eventSimilarityRepository.findAllByEvent(eventId);
+        List<Long> actions = userActionRepository.findAllByUserId(userId).stream()
+                .map(UserAction::getEventId).toList();
+
+        List<EventSimilarity> result = events.stream()
+                .filter(event -> !(actions.contains(event.getAeventId()) && actions.contains(event.getBeventId())))
+                .sorted(Comparator.comparingDouble(EventSimilarity::getScore).reversed())
+                .limit(limit)
+                .toList();
+
+        log.info("similar events are {}", result);
+        return result;
+    }
+
+    private double getPrediction(Long eventId, Long userId) {
+        double prediction = 0.0;
+
+        Map<Long, Double> ratedEvents = userActionRepository.findAllByUserId(userId).stream()
+                .collect(Collectors.toMap(UserAction::getEventId, UserAction::getWeight));
+        List<RecommendedEvent> similarEvents = eventSimilarityRepository.findAllByEventAndEventIdInLimitedTo(
+                        eventId, ratedEvents.keySet().stream().toList(), EVENT_COUNT_PREDICTION)
+                .stream()
+                .map(eventSimilarity -> genRecommendedEventFrom(eventSimilarity, eventId))
+                .toList();
+
+        double weightedSum = 0.0;
+        double similaritySum = 0.0;
+
+        for (RecommendedEvent event : similarEvents) {
+            weightedSum += event.getScore() * ratedEvents.get(event.getEventId());
+            similaritySum += event.getScore();
+        }
+
+        if (similaritySum != 0) {
+            prediction = weightedSum / similaritySum;
+        }
+
+        return prediction;
     }
 }

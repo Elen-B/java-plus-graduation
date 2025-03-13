@@ -20,4 +20,7 @@ public interface UserActionRepository extends JpaRepository<UserAction, Long> {
     @Query("SELECT new ru.practicum.model.RecommendedEvent(ua.eventId, sum(ua.weight)) " +
             "FROM UserAction ua WHERE ua.eventId in :ids GROUP BY ua.eventId")
     List<RecommendedEvent> getSumWeightForEvents(@Param("ids") List<Long> ids);
+
+    @Query("SELECT ua FROM UserAction ua WHERE ua.userId = :id ORDER BY ua.created DESC LIMIT :limit")
+    List<UserAction> findByUserIdOrderByCreatedDescLimitedTo(@Param("id") Long userId, @Param("limit") long limit);
 }
