@@ -18,7 +18,8 @@ public class KafkaConfigProperties {
     private String consumerClientIdConfig;
     private String consumerKeyDeserializer;
     private String consumerValueDeserializer;
-    private long consumeAttemptTimeout;
+    private long consumerAttemptTimeout;
+    private String consumerEnableAutoCommit;
 
     private String userActionTopic;
     private String eventsSimilarityTopic;

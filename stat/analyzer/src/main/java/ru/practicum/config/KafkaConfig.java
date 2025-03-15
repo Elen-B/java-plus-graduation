@@ -31,6 +31,9 @@ public class KafkaConfig {
                 kafkaProperties.getEventSimilarityConsumer().getKeyDeserializer());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 kafkaProperties.getEventSimilarityConsumer().getValueDeserializer());
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
+                kafkaProperties.getEventSimilarityConsumer().getEnableAutoCommit());
+
         return new KafkaConsumer<>(props);
     }
 
@@ -44,6 +47,8 @@ public class KafkaConfig {
                 kafkaProperties.getUserActionConsumer().getKeyDeserializer());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 kafkaProperties.getUserActionConsumer().getValueDeserializer());
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
+                kafkaProperties.getUserActionConsumer().getEnableAutoCommit());
         return new KafkaConsumer<>(props);
     }
 }

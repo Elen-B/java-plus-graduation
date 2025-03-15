@@ -13,4 +13,5 @@ public class ConsumerProperties {
     private String keyDeserializer;
     private String valueDeserializer;
     private long attemptTimeout;
+    private String enableAutoCommit;
 }

@@ -35,7 +35,7 @@ public class AggregationStarter {
             consumer.subscribe(List.of(kafkaConfig.getKafkaProperties().getUserActionTopic()));
             while (true) {
                 ConsumerRecords<String, UserActionAvro> records = consumer
-                        .poll(Duration.ofMillis(kafkaConfig.getKafkaProperties().getConsumeAttemptTimeout()));
+                        .poll(Duration.ofMillis(kafkaConfig.getKafkaProperties().getConsumerAttemptTimeout()));
                 int count = 0;
                 for (ConsumerRecord<String, UserActionAvro> record : records) {
                     log.info("UserActionAvro got from consumer: {}", record);

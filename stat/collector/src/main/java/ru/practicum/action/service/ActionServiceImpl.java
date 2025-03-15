@@ -1,5 +1,6 @@
 package ru.practicum.action.service;
 
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -41,5 +42,13 @@ public class ActionServiceImpl implements ActionService {
                         metadata.topic(), metadata.partition(), metadata.offset());
             }
         });
+    }
+
+    @PreDestroy
+    private void close() {
+        if (producer != null) {
+            producer.flush();
+            producer.close();
+        }
     }
 }
